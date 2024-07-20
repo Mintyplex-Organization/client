@@ -8,29 +8,56 @@ import { Coin } from "@cosmjs/amino";
 import { MsgExecuteContractEncodeObject } from "@cosmjs/cosmwasm-stargate";
 import { MsgExecuteContract } from "cosmjs-types/cosmwasm/wasm/v1/tx";
 import { toUtf8 } from "@cosmjs/encoding";
-import { InstantiateMsg, ExecuteMsg, CollectionParams, MintParams, QueryMsg, Addr, ConfigResponse, Config } from "./Mintyplex.types";
+import { InstantiateMsg, ExecuteMsg, Addr, CollectionParams, MintParams, WithdrawParams, Config, UpdateMintFeeParams } from "./Mintyplex.types";
 export interface MintyplexMsg {
   contractAddress: string;
   sender: string;
   createCollection: ({
     codeId,
+    mintFee,
     name,
     symbol
   }: {
     codeId: number;
+    mintFee: number;
     name: string;
     symbol: string;
   }, _funds?: Coin[]) => MsgExecuteContractEncodeObject;
   mintNFT: ({
     codeId,
+    collectionAddress,
+    collectionCreator,
+    collectionName,
     owner,
-    tokenId,
     tokenUri
   }: {
     codeId: number;
+    collectionAddress: Addr;
+    collectionCreator: Addr;
+    collectionName: string;
     owner: string;
-    tokenId: string;
     tokenUri: string;
+  }, _funds?: Coin[]) => MsgExecuteContractEncodeObject;
+  withdraw: ({
+    withdrawAddress,
+    withdrawAmount
+  }: {
+    withdrawAddress: Addr;
+    withdrawAmount: number;
+  }, _funds?: Coin[]) => MsgExecuteContractEncodeObject;
+  updateConfig: ({
+    mintPercent,
+    owner
+  }: {
+    mintPercent: number;
+    owner: Addr;
+  }, _funds?: Coin[]) => MsgExecuteContractEncodeObject;
+  updateMintFee: ({
+    collectionName,
+    mintFee
+  }: {
+    collectionName: string;
+    mintFee: number;
   }, _funds?: Coin[]) => MsgExecuteContractEncodeObject;
 }
 export class MintyplexMsgComposer implements MintyplexMsg {
@@ -42,14 +69,19 @@ export class MintyplexMsgComposer implements MintyplexMsg {
     this.contractAddress = contractAddress;
     this.createCollection = this.createCollection.bind(this);
     this.mintNFT = this.mintNFT.bind(this);
+    this.withdraw = this.withdraw.bind(this);
+    this.updateConfig = this.updateConfig.bind(this);
+    this.updateMintFee = this.updateMintFee.bind(this);
   }
 
   createCollection = ({
     codeId,
+    mintFee,
     name,
     symbol
   }: {
     codeId: number;
+    mintFee: number;
     name: string;
     symbol: string;
   }, _funds?: Coin[]): MsgExecuteContractEncodeObject => {
@@ -61,6 +93,7 @@ export class MintyplexMsgComposer implements MintyplexMsg {
         msg: toUtf8(JSON.stringify({
           create_collection: {
             code_id: codeId,
+            mint_fee: mintFee,
             name,
             symbol
           }
@@ -71,13 +104,17 @@ export class MintyplexMsgComposer implements MintyplexMsg {
   };
   mintNFT = ({
     codeId,
+    collectionAddress,
+    collectionCreator,
+    collectionName,
     owner,
-    tokenId,
     tokenUri
   }: {
     codeId: number;
+    collectionAddress: Addr;
+    collectionCreator: Addr;
+    collectionName: string;
     owner: string;
-    tokenId: string;
     tokenUri: string;
   }, _funds?: Coin[]): MsgExecuteContractEncodeObject => {
     return {
@@ -88,9 +125,77 @@ export class MintyplexMsgComposer implements MintyplexMsg {
         msg: toUtf8(JSON.stringify({
           mint_n_f_t: {
             code_id: codeId,
+            collection_address: collectionAddress,
+            collection_creator: collectionCreator,
+            collection_name: collectionName,
             owner,
-            token_id: tokenId,
             token_uri: tokenUri
+          }
+        })),
+        funds: _funds
+      })
+    };
+  };
+  withdraw = ({
+    withdrawAddress,
+    withdrawAmount
+  }: {
+    withdrawAddress: Addr;
+    withdrawAmount: number;
+  }, _funds?: Coin[]): MsgExecuteContractEncodeObject => {
+    return {
+      typeUrl: "/cosmwasm.wasm.v1.MsgExecuteContract",
+      value: MsgExecuteContract.fromPartial({
+        sender: this.sender,
+        contract: this.contractAddress,
+        msg: toUtf8(JSON.stringify({
+          withdraw: {
+            withdraw_address: withdrawAddress,
+            withdraw_amount: withdrawAmount
+          }
+        })),
+        funds: _funds
+      })
+    };
+  };
+  updateConfig = ({
+    mintPercent,
+    owner
+  }: {
+    mintPercent: number;
+    owner: Addr;
+  }, _funds?: Coin[]): MsgExecuteContractEncodeObject => {
+    return {
+      typeUrl: "/cosmwasm.wasm.v1.MsgExecuteContract",
+      value: MsgExecuteContract.fromPartial({
+        sender: this.sender,
+        contract: this.contractAddress,
+        msg: toUtf8(JSON.stringify({
+          update_config: {
+            mint_percent: mintPercent,
+            owner
+          }
+        })),
+        funds: _funds
+      })
+    };
+  };
+  updateMintFee = ({
+    collectionName,
+    mintFee
+  }: {
+    collectionName: string;
+    mintFee: number;
+  }, _funds?: Coin[]): MsgExecuteContractEncodeObject => {
+    return {
+      typeUrl: "/cosmwasm.wasm.v1.MsgExecuteContract",
+      value: MsgExecuteContract.fromPartial({
+        sender: this.sender,
+        contract: this.contractAddress,
+        msg: toUtf8(JSON.stringify({
+          update_mint_fee: {
+            collection_name: collectionName,
+            mint_fee: mintFee
           }
         })),
         funds: _funds

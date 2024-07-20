@@ -5,32 +5,44 @@
 */
 
 export interface InstantiateMsg {
+  mint_percent: number;
   owner?: string | null;
 }
 export type ExecuteMsg = {
   create_collection: CollectionParams;
 } | {
   mint_n_f_t: MintParams;
+} | {
+  withdraw: WithdrawParams;
+} | {
+  update_config: Config;
+} | {
+  update_mint_fee: UpdateMintFeeParams;
 };
+export type Addr = string;
 export interface CollectionParams {
   code_id: number;
+  mint_fee: number;
   name: string;
   symbol: string;
 }
 export interface MintParams {
   code_id: number;
+  collection_address: Addr;
+  collection_creator: Addr;
+  collection_name: string;
   owner: string;
-  token_id: string;
   token_uri: string;
 }
-export type QueryMsg = {
-  query_config: {};
-};
-export type Addr = string;
-export interface ConfigResponse {
-  collection_address: Addr;
-  config: Config;
+export interface WithdrawParams {
+  withdraw_address: Addr;
+  withdraw_amount: number;
 }
 export interface Config {
+  mint_percent: number;
   owner: Addr;
+}
+export interface UpdateMintFeeParams {
+  collection_name: string;
+  mint_fee: number;
 }

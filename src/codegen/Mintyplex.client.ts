@@ -4,79 +4,91 @@
 * and run the @cosmwasm/ts-codegen generate command to regenerate this file.
 */
 
-import { CosmWasmClient, SigningCosmWasmClient, ExecuteResult } from "@cosmjs/cosmwasm-stargate";
 import { Coin, StdFee } from "@cosmjs/amino";
-import { InstantiateMsg, ExecuteMsg, CollectionParams, MintParams, QueryMsg, Addr, ConfigResponse, Config } from "./Mintyplex.types";
-export interface MintyplexReadOnlyInterface {
-  contractAddress: string;
-  queryConfig: () => Promise<ConfigResponse>;
-}
-export class MintyplexQueryClient implements MintyplexReadOnlyInterface {
-  client: CosmWasmClient;
-  contractAddress: string;
-
-  constructor(client: CosmWasmClient, contractAddress: string) {
-    this.client = client;
-    this.contractAddress = contractAddress;
-    this.queryConfig = this.queryConfig.bind(this);
-  }
-
-  queryConfig = async (): Promise<ConfigResponse> => {
-    return this.client.queryContractSmart(this.contractAddress, {
-      query_config: {}
-    });
-  };
-}
-export interface MintyplexInterface extends MintyplexReadOnlyInterface {
+import { SigningCosmWasmClient, ExecuteResult } from "@cosmjs/cosmwasm-stargate";
+import { InstantiateMsg, ExecuteMsg, Addr, CollectionParams, MintParams, WithdrawParams, Config, UpdateMintFeeParams } from "./Mintyplex.types";
+export interface MintyplexInterface {
   contractAddress: string;
   sender: string;
   createCollection: ({
     codeId,
+    mintFee,
     name,
     symbol
   }: {
     codeId: number;
+    mintFee: number;
     name: string;
     symbol: string;
   }, fee?: number | StdFee | "auto", memo?: string, _funds?: Coin[]) => Promise<ExecuteResult>;
   mintNFT: ({
     codeId,
+    collectionAddress,
+    collectionCreator,
+    collectionName,
     owner,
-    tokenId,
     tokenUri
   }: {
     codeId: number;
+    collectionAddress: Addr;
+    collectionCreator: Addr;
+    collectionName: string;
     owner: string;
-    tokenId: string;
     tokenUri: string;
   }, fee?: number | StdFee | "auto", memo?: string, _funds?: Coin[]) => Promise<ExecuteResult>;
+  withdraw: ({
+    withdrawAddress,
+    withdrawAmount
+  }: {
+    withdrawAddress: Addr;
+    withdrawAmount: number;
+  }, fee?: number | StdFee | "auto", memo?: string, _funds?: Coin[]) => Promise<ExecuteResult>;
+  updateConfig: ({
+    mintPercent,
+    owner
+  }: {
+    mintPercent: number;
+    owner: Addr;
+  }, fee?: number | StdFee | "auto", memo?: string, _funds?: Coin[]) => Promise<ExecuteResult>;
+  updateMintFee: ({
+    collectionName,
+    mintFee
+  }: {
+    collectionName: string;
+    mintFee: number;
+  }, fee?: number | StdFee | "auto", memo?: string, _funds?: Coin[]) => Promise<ExecuteResult>;
 }
-export class MintyplexClient extends MintyplexQueryClient implements MintyplexInterface {
+export class MintyplexClient implements MintyplexInterface {
   client: SigningCosmWasmClient;
   sender: string;
   contractAddress: string;
 
   constructor(client: SigningCosmWasmClient, sender: string, contractAddress: string) {
-    super(client, contractAddress);
     this.client = client;
     this.sender = sender;
     this.contractAddress = contractAddress;
     this.createCollection = this.createCollection.bind(this);
     this.mintNFT = this.mintNFT.bind(this);
+    this.withdraw = this.withdraw.bind(this);
+    this.updateConfig = this.updateConfig.bind(this);
+    this.updateMintFee = this.updateMintFee.bind(this);
   }
 
   createCollection = async ({
     codeId,
+    mintFee,
     name,
     symbol
   }: {
     codeId: number;
+    mintFee: number;
     name: string;
     symbol: string;
   }, fee: number | StdFee | "auto" = "auto", memo?: string, _funds?: Coin[]): Promise<ExecuteResult> => {
     return await this.client.execute(this.sender, this.contractAddress, {
       create_collection: {
         code_id: codeId,
+        mint_fee: mintFee,
         name,
         symbol
       }
@@ -84,21 +96,69 @@ export class MintyplexClient extends MintyplexQueryClient implements MintyplexIn
   };
   mintNFT = async ({
     codeId,
+    collectionAddress,
+    collectionCreator,
+    collectionName,
     owner,
-    tokenId,
     tokenUri
   }: {
     codeId: number;
+    collectionAddress: Addr;
+    collectionCreator: Addr;
+    collectionName: string;
     owner: string;
-    tokenId: string;
     tokenUri: string;
   }, fee: number | StdFee | "auto" = "auto", memo?: string, _funds?: Coin[]): Promise<ExecuteResult> => {
     return await this.client.execute(this.sender, this.contractAddress, {
       mint_n_f_t: {
         code_id: codeId,
+        collection_address: collectionAddress,
+        collection_creator: collectionCreator,
+        collection_name: collectionName,
         owner,
-        token_id: tokenId,
         token_uri: tokenUri
+      }
+    }, fee, memo, _funds);
+  };
+  withdraw = async ({
+    withdrawAddress,
+    withdrawAmount
+  }: {
+    withdrawAddress: Addr;
+    withdrawAmount: number;
+  }, fee: number | StdFee | "auto" = "auto", memo?: string, _funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      withdraw: {
+        withdraw_address: withdrawAddress,
+        withdraw_amount: withdrawAmount
+      }
+    }, fee, memo, _funds);
+  };
+  updateConfig = async ({
+    mintPercent,
+    owner
+  }: {
+    mintPercent: number;
+    owner: Addr;
+  }, fee: number | StdFee | "auto" = "auto", memo?: string, _funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      update_config: {
+        mint_percent: mintPercent,
+        owner
+      }
+    }, fee, memo, _funds);
+  };
+  updateMintFee = async ({
+    collectionName,
+    mintFee
+  }: {
+    collectionName: string;
+    mintFee: number;
+  }, fee: number | StdFee | "auto" = "auto", memo?: string, _funds?: Coin[]): Promise<ExecuteResult> => {
+    return await this.client.execute(this.sender, this.contractAddress, {
+      update_mint_fee: {
+        collection_name: collectionName,
+        mint_fee: mintFee
       }
     }, fee, memo, _funds);
   };
