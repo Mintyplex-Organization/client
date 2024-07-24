@@ -60,7 +60,10 @@
   },
   "dependencies": {
     "@cosmjs/cosmwasm-stargate": "^0.31.0",
+    "@cosmjs/sdk38": "^0.21.1",
     "@cosmjs/stargate": "^0.32.3",
-    "dotenv": "^16.4.5"
+    "cosmwasm": "^1.1.1",
+    "dotenv": "^16.4.5",
+    "tsc": "^2.0.4"
   }
 }
