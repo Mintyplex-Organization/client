@@ -3,25 +3,22 @@
 import { contracts } from "./codegen";
 import { DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
 import { SigningCosmWasmClient } from "@cosmjs/cosmwasm-stargate";
+import "dotenv/config";
 
-const mnemonic =
-  "tragic man unveil law index keep turtle aunt labor music virus today reflect immune print unveil farm uncover employ ocean leopard slab fix buyer";
+const mnemonic = process.env.MNEMONIC;
+const rpcUrl = process.env.RPC_URL;
+const contractAddress = process.env.CONTRACT_ADDRESS;
+const sender = process.env.SENDER;
 
 async function main() {
-  // const pen = await cosmosPen.Secp256k1Pen.fromMnemonic(mnemonic);
-
   let wallet = await DirectSecp256k1HdWallet.fromMnemonic(mnemonic, {
     prefix: "xion",
   });
 
   const signingClient = await SigningCosmWasmClient.connectWithSigner(
-    "https://rpc.xion-testnet-1.burnt.com/",
+    rpcUrl,
     wallet,
   );
-
-  const contractAddress =
-    "xion1z7lyct6reu9gzsuq382ewn0jd3s4c85t6tl0z2gn5zq63px8feysxm5umq";
-  const sender = "xion1vprmgc7066c9d9pfu4k0uq47v7lqz5tjk6f84m";
 
   const client = new contracts.Mintyplex.MintyplexClient(
     signingClient,
