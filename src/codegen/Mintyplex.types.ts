@@ -46,3 +46,24 @@ export interface UpdateMintFeeParams {
   collection_name: string;
   mint_fee: number;
 }
+export type QueryMsg = {
+  config: {};
+} | {
+  token_index: {};
+} | {
+  creator_collections: {
+    collection_name: string;
+    creator: Addr;
+  };
+};
+export interface ConfigResponse {
+  mint_percent: number;
+  owner: Addr;
+}
+export interface CollectionInfoResponse {
+  collection_address?: Addr | null;
+  mint_fee: number;
+  name: string;
+  symbol: string;
+}
+export type Uint64 = number;

@@ -8,7 +8,7 @@ import { Coin } from "@cosmjs/amino";
 import { MsgExecuteContractEncodeObject } from "@cosmjs/cosmwasm-stargate";
 import { MsgExecuteContract } from "cosmjs-types/cosmwasm/wasm/v1/tx";
 import { toUtf8 } from "@cosmjs/encoding";
-import { InstantiateMsg, ExecuteMsg, Addr, CollectionParams, MintParams, WithdrawParams, Config, UpdateMintFeeParams } from "./Mintyplex.types";
+import { InstantiateMsg, ExecuteMsg, Addr, CollectionParams, MintParams, WithdrawParams, Config, UpdateMintFeeParams, QueryMsg, ConfigResponse, CollectionInfoResponse, Uint64 } from "./Mintyplex.types";
 export interface MintyplexMsg {
   contractAddress: string;
   sender: string;

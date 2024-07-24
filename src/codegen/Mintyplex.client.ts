@@ -4,10 +4,59 @@
 * and run the @cosmwasm/ts-codegen generate command to regenerate this file.
 */
 
+import { CosmWasmClient, SigningCosmWasmClient, ExecuteResult } from "@cosmjs/cosmwasm-stargate";
 import { Coin, StdFee } from "@cosmjs/amino";
-import { SigningCosmWasmClient, ExecuteResult } from "@cosmjs/cosmwasm-stargate";
-import { InstantiateMsg, ExecuteMsg, Addr, CollectionParams, MintParams, WithdrawParams, Config, UpdateMintFeeParams } from "./Mintyplex.types";
-export interface MintyplexInterface {
+import { InstantiateMsg, ExecuteMsg, Addr, CollectionParams, MintParams, WithdrawParams, Config, UpdateMintFeeParams, QueryMsg, ConfigResponse, CollectionInfoResponse, Uint64 } from "./Mintyplex.types";
+export interface MintyplexReadOnlyInterface {
+  contractAddress: string;
+  config: () => Promise<ConfigResponse>;
+  tokenIndex: () => Promise<Uint64>;
+  creatorCollections: ({
+    collectionName,
+    creator
+  }: {
+    collectionName: string;
+    creator: Addr;
+  }) => Promise<CollectionInfoResponse>;
+}
+export class MintyplexQueryClient implements MintyplexReadOnlyInterface {
+  client: CosmWasmClient;
+  contractAddress: string;
+
+  constructor(client: CosmWasmClient, contractAddress: string) {
+    this.client = client;
+    this.contractAddress = contractAddress;
+    this.config = this.config.bind(this);
+    this.tokenIndex = this.tokenIndex.bind(this);
+    this.creatorCollections = this.creatorCollections.bind(this);
+  }
+
+  config = async (): Promise<ConfigResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      config: {}
+    });
+  };
+  tokenIndex = async (): Promise<Uint64> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      token_index: {}
+    });
+  };
+  creatorCollections = async ({
+    collectionName,
+    creator
+  }: {
+    collectionName: string;
+    creator: Addr;
+  }): Promise<CollectionInfoResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, {
+      creator_collections: {
+        collection_name: collectionName,
+        creator
+      }
+    });
+  };
+}
+export interface MintyplexInterface extends MintyplexReadOnlyInterface {
   contractAddress: string;
   sender: string;
   createCollection: ({
@@ -58,12 +107,13 @@ export interface MintyplexInterface {
     mintFee: number;
   }, fee?: number | StdFee | "auto", memo?: string, _funds?: Coin[]) => Promise<ExecuteResult>;
 }
-export class MintyplexClient implements MintyplexInterface {
+export class MintyplexClient extends MintyplexQueryClient implements MintyplexInterface {
   client: SigningCosmWasmClient;
   sender: string;
   contractAddress: string;
 
   constructor(client: SigningCosmWasmClient, sender: string, contractAddress: string) {
+    super(client, contractAddress);
     this.client = client;
     this.sender = sender;
     this.contractAddress = contractAddress;
